@@ -5,18 +5,21 @@ from .utils import send_otp
 
 class CustomUserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
+    confirm_password = serializers.CharField(write_only=True)
 
     class Meta:
         model = CustomUser
-        fields = ['username', 'email', 'phone_number', 'password']
+        fields = ['username', 'email', 'phone_number', 'password', 'confirm_password']
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def validate(self, data):
+        if data['password'] != data['confirm_password']:
+            raise serializers.ValidationError("The passwords do not match.")
+        return data
 
     def create(self, validated_data):
-        user = CustomUser.objects.create_user(
-            username=validated_data['username'],
-            email=validated_data.get('email'),
-            phone_number=validated_data.get('phone_number'),
-            password=validated_data['password']
-        )
+        validated_data.pop('confirm_password')  # Remove confirm_password before creating user
+        user = CustomUser.objects.create_user(**validated_data)
         send_otp(validated_data.get('email'))
         return user
 

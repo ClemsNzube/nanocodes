@@ -1,5 +1,5 @@
 from django.db import models
-
+from accounts.models import CustomUser
 class Category(models.Model):
     name = models.CharField(max_length=50)
 
@@ -15,6 +15,7 @@ class Event(models.Model):
     location = models.CharField(max_length=255)
     flyer = models.ImageField(upload_to='event_flyers/', blank=True, null=True)
     categories = models.ManyToManyField(Category, blank=True)
+    owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='events')
 
     def __str__(self):
         return self.name

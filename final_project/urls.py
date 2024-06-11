@@ -40,4 +40,6 @@ urlpatterns = [
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     path('accounts/', include('accounts.urls')),
     path('events/', include('events.urls')),
+    path('rating/', include('ratings.urls')),
+    path('review/', include('review.urls')),
 ]

@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     'accounts',
     'drf_yasg',
     'events',
+    'ratings',
+    'review',
 ]
 
 MIDDLEWARE = [

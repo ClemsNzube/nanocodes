@@ -45,6 +45,8 @@ INSTALLED_APPS = [
     'events',
     'ratings',
     'review',
+    'contact',
+    'faq',
 ]
 
 MIDDLEWARE = [

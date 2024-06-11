@@ -42,4 +42,6 @@ urlpatterns = [
     path('events/', include('events.urls')),
     path('rating/', include('ratings.urls')),
     path('review/', include('review.urls')),
+    path('contact/', include('contact.urls')),
+    path('faq/', include('faq.urls')),
 ]

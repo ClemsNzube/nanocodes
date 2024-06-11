@@ -7,7 +7,7 @@ from django.core.cache import cache
 from rest_framework_simplejwt.exceptions import TokenError
 from .utils import *
 from .models import CustomUser
-from .serializers import CustomUserSerializer, OTPVerificationSerializer, PasswordChangeSerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer, ResendOTPSerializer
+from .serializers import CustomUserSerializer, OTPVerificationSerializer, PasswordChangeSerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer, ResendOTPSerializer, UserListSerializer, UserLoginSerializer
 
 class UserRegistrationView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
@@ -35,18 +35,26 @@ class VerifyOTPView(generics.CreateAPIView):
                 return Response({"error": "Invalid OTP."}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class CustomTokenObtainPairView(TokenObtainPairView):
+
+class UserLoginView(generics.GenericAPIView):
+    serializer_class = UserLoginSerializer
+    permission_classes = (permissions.AllowAny,)
+
     def post(self, request, *args, **kwargs):
-        try:
-            user = CustomUser.objects.get(email=request.data.get('email'))
-            if not user.email_verified:
-                send_otp(user.email)
-                return Response({"error": "Email not verified. OTP sent to email."}, status=status.HTTP_400_BAD_REQUEST)
-        except CustomUser.DoesNotExist:
-            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
-        
-        return super().post(request, *args, **kwargs)
-    
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+
+        if user.email_verified:
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+            }, status=status.HTTP_200_OK)
+        else:
+            # Send OTP for email verification
+            send_otp(user.email)
+            return Response({'error': 'Email not verified. OTP sent to email.'}, status=status.HTTP_400_BAD_REQUEST)
 
 class ChangePasswordView(generics.UpdateAPIView):
     serializer_class = PasswordChangeSerializer
@@ -143,3 +151,9 @@ class ResendOTPView(generics.GenericAPIView):
             send_otp(email)
             return Response({"message": "OTP resent to email."}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class UserListView(generics.ListAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = UserListSerializer
+    permission_classes = [permissions.IsAuthenticated]

@@ -1,8 +1,8 @@
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
-from .models import Event
-from .serializers import EventSerializer
+from .models import Category, Event
+from .serializers import CategorySerializer, EventSerializer
 from datetime import date
 
 class EventListCreateView(generics.ListCreateAPIView):
@@ -30,8 +30,8 @@ class EventCategoryListView(generics.ListAPIView):
     serializer_class = EventSerializer
 
     def get_queryset(self):
-        category = self.kwargs['category']
-        return Event.objects.filter(categories__name=category)
+        category_id = self.kwargs['category_id']
+        return Event.objects.filter(categories__id=category_id)
 
 class UpcomingEventListView(generics.ListAPIView):
     serializer_class = EventSerializer
@@ -43,3 +43,9 @@ class AllEventsListView(generics.ListAPIView):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
     permission_classes = [permissions.AllowAny]
+
+
+class CategoryListCreateView(generics.ListCreateAPIView):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]

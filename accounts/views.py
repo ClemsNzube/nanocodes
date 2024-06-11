@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.cache import cache
+from rest_framework_simplejwt.exceptions import TokenError
 from .utils import *
 from .models import CustomUser
 from .serializers import CustomUserSerializer, OTPVerificationSerializer, PasswordChangeSerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer
@@ -114,3 +115,17 @@ class PasswordResetConfirmView(generics.CreateAPIView):
             else:
                 return Response({"error": "Invalid OTP."}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class LogoutView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        try:
+            refresh_token = request.data["refresh_token"]
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+
+            return Response(status=status.HTTP_205_RESET_CONTENT)
+        except TokenError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
